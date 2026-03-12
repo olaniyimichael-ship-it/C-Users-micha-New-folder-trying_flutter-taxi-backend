@@ -16,12 +16,14 @@ async function findNearestDriversSorted(pickupLat, pickupLng, limit = 10) {
 	const drivers = await DriverLocation.find({ isOnline: true });
 
 	const scored = drivers
-		.filter((d) => typeof d.lat === "number" && typeof d.lng === "number")
 		.map((d) => ({
 			driverId: String(d.driverId),
 			lat: d.lat,
 			lng: d.lng,
-			distanceKm: haversineKm(pickupLat, pickupLng, d.lat, d.lng),
+			distanceKm:
+				typeof d.lat === "number" && typeof d.lng === "number"
+					? haversineKm(pickupLat, pickupLng, d.lat, d.lng)
+					: Number.POSITIVE_INFINITY,
 		}))
 		.sort((a, b) => a.distanceKm - b.distanceKm)
 		.slice(0, limit);
