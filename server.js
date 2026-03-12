@@ -19,11 +19,6 @@ const rideTimeouts = new Map();
 
 const OFFER_TIMEOUT_MS = 20_000;
 const PORT = Number(process.env.PORT) || 5000;
-const corsOriginRaw = process.env.CORS_ORIGIN || "*";
-const corsOrigins = corsOriginRaw
-    .split(",")
-    .map((value) => value.trim())
-    .filter(Boolean);
 
 if (!process.env.MONGODB_URI) {
     throw new Error("Missing MONGODB_URI in environment variables");
@@ -41,7 +36,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: corsOrigins.includes("*") ? "*" : corsOrigins,
+        origin: "*", // temporary for testing
         methods: ["GET", "POST"],
     },
 });
@@ -50,6 +45,12 @@ setIO(io);
 
 io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
+
+    // Temporary diagnostics: shows every incoming socket event in Render logs.
+    socket.onAny((eventName) => {
+        if (eventName === "driverPing") return;
+        console.log(`[SOCKET EVENT] ${eventName} from ${socket.id}`);
+    });
 
     socket.on("register", (userId) => {
         registerUser(userId, socket.id);
